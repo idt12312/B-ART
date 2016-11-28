@@ -13,6 +13,13 @@
   )
 
   (page A4)
+  (title_block
+    (title uart2ble_bridge)
+    (date 2016-11-27)
+    (rev 1)
+    (company idt12312)
+  )
+
   (layers
     (0 F.Cu signal)
     (31 B.Cu signal)
