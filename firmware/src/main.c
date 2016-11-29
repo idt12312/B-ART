@@ -14,6 +14,7 @@
 #include "SEGGER_RTT.h"
 #include "ble_uart2bles.h"
 #include "hardware_conf.h"
+#include "led.h"
 
 
 #ifdef DEBUG
@@ -40,7 +41,6 @@
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */
 
-#define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_OP_QUEUE_SIZE         4                                           /**< Size of timer operation queues. */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
@@ -204,24 +204,26 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
     	case BLE_GATTS_EVT_WRITE:
+    		led_blink(RX_LED);
     		DBG("[BLE event] BLE_GATTS_EVT_WRITE\n");
     		break;
 
     	case BLE_GATTS_EVT_HVC:
+    		led_blink(TX_LED);
     		DBG("[BLE event] BLE_GATTS_EVT_HVC\n");
     		break;
 
         case BLE_GAP_EVT_CONNECTED:
             DBG("[BLE event] BLE_GAP_EVT_CONNECTED\n");
-            //err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-            //APP_ERROR_CHECK(err_code);
+            led_blink(TX_LED);
+            led_blink(RX_LED);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             break; // BLE_GAP_EVT_CONNECTED
 
         case BLE_GAP_EVT_DISCONNECTED:
             DBG("[BLE event] BLE_GAP_EVT_DISCONNECTED\n");
-            //err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-            //APP_ERROR_CHECK(err_code);
+            led_on(TX_LED);
+            led_off(RX_LED);
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             break; // BLE_GAP_EVT_DISCONNECTED
 
@@ -309,8 +311,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     ble_conn_params_on_ble_evt(p_ble_evt);
-    ble_uart2bles_on_ble_evt(&m_uart2bles, p_ble_evt);
     on_ble_evt(p_ble_evt);
+    ble_uart2bles_on_ble_evt(&m_uart2bles, p_ble_evt);
     ble_advertising_on_ble_evt(p_ble_evt);
 
 }
@@ -464,9 +466,14 @@ int main(void)
     advertising_init();
     conn_params_init();
 
+    led_init();
+
     printf("\r\nUART Start!\r\n");
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
+
+    led_on(TX_LED);
+    led_off(RX_LED);
 
     // Enter main loop.
     for (;;)
