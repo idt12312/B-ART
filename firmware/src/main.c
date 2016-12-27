@@ -10,6 +10,7 @@
 #include "app_timer.h"
 #include "app_uart.h"
 #include "app_util_platform.h"
+#include "nrf_gpio.h"
 
 #include "SEGGER_RTT.h"
 #include "ble_uart2bles.h"
@@ -114,6 +115,19 @@ static void uart2bles_data_handler(ble_uart2bles_t * p_uart2bles, uint8_t * p_da
 	DBG("\n");
 }
 
+static uint8_t get_device_id()
+{
+	uint8_t device_id = 0;
+	nrf_gpio_cfg_input(DEVICEID_JUMPER1_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(DEVICEID_JUMPER2_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(DEVICEID_JUMPER3_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
+
+	if (!nrf_gpio_pin_read(DEVICEID_JUMPER1_PIN_NUMBER)) device_id |= 0x01;
+	if (!nrf_gpio_pin_read(DEVICEID_JUMPER2_PIN_NUMBER)) device_id |= 0x02;
+	if (!nrf_gpio_pin_read(DEVICEID_JUMPER3_PIN_NUMBER)) device_id |= 0x04;
+
+	return device_id;
+}
 
 static void services_init(void)
 {
@@ -125,8 +139,8 @@ static void services_init(void)
     uart2bles_init.data_handler = uart2bles_data_handler;
 
     // device id の設定
-    // TODO:ジャンパーピンの状態を読み込んでdevice idを決定する
-    uart2bles_init.device_id = 0;
+    uart2bles_init.device_id = get_device_id();
+    DBG("[uart2bles] Device ID : %u\r\n", uart2bles_init.device_id);
 
     err_code = ble_uart2bles_init(&m_uart2bles, &uart2bles_init);
     APP_ERROR_CHECK(err_code);
@@ -460,6 +474,8 @@ int main(void)
 
     SEGGER_RTT_Init();
 
+    DBG("\r\nUART2BLE Brigde initializing...\r\n");
+
     ble_stack_init();
     gap_params_init();
     services_init();
@@ -468,7 +484,8 @@ int main(void)
 
     led_init();
 
-    printf("\r\nUART Start!\r\n");
+    DBG("ble2uart Service Start\r\n");
+
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
 
