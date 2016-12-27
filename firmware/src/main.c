@@ -223,7 +223,6 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     		break;
 
     	case BLE_GATTS_EVT_HVC:
-    		led_blink(TX_LED);
     		DBG("[BLE event] BLE_GATTS_EVT_HVC\n");
     		break;
 
@@ -383,6 +382,7 @@ static void uart_event_handle(app_uart_evt_t * p_event)
             	}
             	DBG("\n");
                 err_code = ble_uart2bles_send(&m_uart2bles, data_array, index);
+        		led_blink(TX_LED);
                 if (err_code != NRF_ERROR_INVALID_STATE)
                 {
                     APP_ERROR_CHECK(err_code);

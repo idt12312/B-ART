@@ -13,8 +13,8 @@
 #include "hardware_conf.h"
 
 
-#define LED_ON_TIME	 100
-#define LED_OFF_TIME 900
+#define LED_ON_TIME	 20
+#define LED_OFF_TIME 180
 
 APP_TIMER_DEF(m_tx_led_timer_id);
 APP_TIMER_DEF(m_rx_led_timer_id);
