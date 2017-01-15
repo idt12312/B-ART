@@ -60,7 +60,7 @@
 static ble_uart2bles_t					m_uart2bles;
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
-static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_UART2BLE_SERVICE, NUS_SERVICE_UUID_TYPE}};  /**< Universally unique service identifier. */
+static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_UART2BLE_SERVICE}};  /**< Universally unique service identifier. */
 
 
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
