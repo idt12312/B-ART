@@ -388,6 +388,9 @@ void server_main(uint8_t device_id)
 	advertising_init();
 	conn_params_init();
 
+	//送信強度を4dB(最大)に設定
+	err_code = sd_ble_gap_tx_power_set(4);
+	APP_ERROR_CHECK(err_code);
 
 	DBG("ble2uart Service Start\r\n");
 

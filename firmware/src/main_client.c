@@ -362,6 +362,9 @@ void client_main(uint8_t device_id)
 	// with devices that advertise UART2BLES UUID.
 	scan_start();
 	DBG("Scan started\r\n");
+	//送信強度を4dB(最大)に設定
+	err_code = sd_ble_gap_tx_power_set(4);
+	APP_ERROR_CHECK(err_code);
 
 	while (1) {
 		uint32_t err_code = sd_app_evt_wait();
