@@ -1,3 +1,0 @@
-(fp_lib_table
-  (lib (name uart2ble_bridge)(type KiCad)(uri "$(KIPRJMOD)/lib/uart2ble_bridge.pretty")(options "")(descr ""))
-)

@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name uart2ble_bridge)(type KiCad)(uri C:\Users\idt12312\Documents\works\uart2ble_bridge\pcb\lib\uart2ble_bridge.pretty)(options "")(descr ""))
+)
