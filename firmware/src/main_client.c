@@ -16,10 +16,11 @@
 #include "ble_uart2bles_c.h"
 
 #include "hardware_conf.h"
+#include "led.h"
 
 
 #ifdef DEBUG
-#define DBG(...) printf("" __VA_ARGS__)
+#define DBG(...) printf(__VA_ARGS__)
 #else
 #define DBG(...)
 #endif
@@ -94,17 +95,23 @@ void client_uart_event_handle(app_uart_evt_t * p_event)
 {
 	static uint8_t data_array[BLE_UART2BLES_MAX_DATA_LEN];
 	static uint8_t index = 0;
+	uint32_t       err_code;
 
 	switch (p_event->evt_type) {
-	/**@snippet [Handling data from UART] */
 	case APP_UART_DATA_READY:
 		UNUSED_VARIABLE(app_uart_get(&data_array[index]));
 		index++;
 
 		if ((data_array[index - 1] == '\n') || (index >= (BLE_UART2BLES_MAX_DATA_LEN))) {
-			while (ble_uart2bles_c_send(&m_ble_uart2bles_c, data_array, index) != NRF_SUCCESS)
-			{
-				// repeat until sent.
+			DBG("[UART receive]");
+			for (int i=0;i<index;i++) {
+				DBG("%02x",data_array[i]);
+			}
+			DBG("\n");
+			err_code = ble_uart2bles_c_send(&m_ble_uart2bles_c, data_array, index);
+			led_blink(TX_LED);
+			if (err_code != NRF_ERROR_INVALID_STATE) {
+				APP_ERROR_CHECK(err_code);
 			}
 			index = 0;
 		}
@@ -134,17 +141,23 @@ static void ble_uart2bles_c_evt_handler(ble_uart2bles_c_t * p_ble_uart2bles_c, c
 
 		err_code = ble_uart2bles_c_rx_notif_enable(p_ble_uart2bles_c);
 		APP_ERROR_CHECK(err_code);
-		DBG("The device has the Nordic UART Service\r\n");
+		DBG("The device has the UART2BLE Service\n");
 		break;
 
 	case BLE_UART2BLES_C_EVT_UART2BLES_RX_EVT:
+		DBG("[UART send]");
+		led_blink(RX_LED);
 		for (uint32_t i = 0; i < p_ble_uart2bles_evt->data_len; i++) {
+			DBG("%c", p_ble_uart2bles_evt->p_data[i]);
 			while(app_uart_put( p_ble_uart2bles_evt->p_data[i]) != NRF_SUCCESS);
 		}
+		DBG("\n");
 		break;
 
 	case BLE_UART2BLES_C_EVT_DISCONNECTED:
-		DBG("Disconnected\r\n");
+		DBG("Disconnected\n");
+		led_off(TX_LED);
+		led_on(RX_LED);
 		scan_start();
 		break;
 	}
@@ -232,6 +245,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 	switch (p_ble_evt->header.evt_id) {
 	case BLE_GAP_EVT_ADV_REPORT:
 	{
+		DBG("[BLE event] BLE_GAP_EVT_ADV_REPORT\n");
+
 		const ble_gap_evt_adv_report_t * p_adv_report = &p_gap_evt->params.adv_report;
 
 		if (is_uuid_present(&m_uart2bles_uuid, p_adv_report))
@@ -245,7 +260,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 			{
 				// scan is automatically stopped by the connect
 				APP_ERROR_CHECK(err_code);
-				DBG("Connecting to target %02x%02x%02x%02x%02x%02x\r\n",
+				DBG("Connecting to target %02x%02x%02x%02x%02x%02x\n",
 						p_adv_report->peer_addr.addr[0],
 						p_adv_report->peer_addr.addr[1],
 						p_adv_report->peer_addr.addr[2],
@@ -259,8 +274,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 	}
 
 	case BLE_GAP_EVT_CONNECTED:
-		DBG("Connected to target\r\n");
-		APP_ERROR_CHECK(err_code);
+		DBG("[BLE event] BLE_GAP_EVT_CONNECTED\n");
+		led_blink(TX_LED);
+		led_blink(RX_LED);
 
 		// start discovery of services. The UART2BLES Client waits for a discovery result
 		err_code = ble_db_discovery_start(&m_ble_db_discovery, p_ble_evt->evt.gap_evt.conn_handle);
@@ -268,22 +284,25 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 		break;
 
 	case BLE_GAP_EVT_TIMEOUT:
+		DBG("[BLE event] BLE_GAP_EVT_TIMEOUT\n");
 		if (p_gap_evt->params.timeout.src == BLE_GAP_TIMEOUT_SRC_SCAN) {
-			DBG("[APPL]: Scan timed out.\r\n");
+			DBG("Scan timed out\n");
 			scan_start();
 		}
 		else if (p_gap_evt->params.timeout.src == BLE_GAP_TIMEOUT_SRC_CONN) {
-			DBG("[APPL]: Connection Request timed out.\r\n");
+			DBG("Connection Request timed out\n");
 		}
 		break;
 
 	case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
+		DBG("[BLE event] BLE_GAP_EVT_SEC_PARAMS_REQUEST\n");
 		// Pairing not supported
 		err_code = sd_ble_gap_sec_params_reply(p_ble_evt->evt.gap_evt.conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL);
 		APP_ERROR_CHECK(err_code);
 		break;
 
 	case BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST:
+		DBG("[BLE event] BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST\n");
 		// Accepting parameters requested by peer.
 		err_code = sd_ble_gap_conn_param_update(p_gap_evt->conn_handle,
 				&p_gap_evt->params.conn_param_update_request.conn_params);
@@ -332,13 +351,15 @@ static void ble_stack_init(void)
 }
 
 
-static void uart2bles_c_init(uint8_t device_id)
+static void services_init(uint8_t device_id)
 {
 	uint32_t         err_code;
 	ble_uart2bles_c_init_t uart2bles_c_init_t;
 
 	uart2bles_c_init_t.evt_handler = ble_uart2bles_c_evt_handler;
+
 	uart2bles_c_init_t.device_id = device_id;
+	DBG("[uart2bles] Device ID : %u\n", uart2bles_c_init_t.device_id);
 
 	err_code = ble_uart2bles_c_init(&m_ble_uart2bles_c, &uart2bles_c_init_t);
 	APP_ERROR_CHECK(err_code);
@@ -354,17 +375,23 @@ static void db_discovery_init(void)
 
 void client_main(uint8_t device_id)
 {
+	uint32_t err_code;
+
 	db_discovery_init();
 	ble_stack_init();
-	uart2bles_c_init(device_id);
+	services_init(device_id);
 
 	// Start scanning for peripherals and initiate connection
 	// with devices that advertise UART2BLES UUID.
 	scan_start();
-	DBG("Scan started\r\n");
+	DBG("Scan started\n");
+
 	//送信強度を4dB(最大)に設定
 	err_code = sd_ble_gap_tx_power_set(4);
 	APP_ERROR_CHECK(err_code);
+
+	led_off(TX_LED);
+	led_on(RX_LED);
 
 	while (1) {
 		uint32_t err_code = sd_app_evt_wait();

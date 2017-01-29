@@ -102,7 +102,7 @@ int main()
     SEGGER_RTT_Init();
     led_init();
 
-    DBG("\r\nUART2BLE Brigde initializing...\r\n");
+    DBG("\nUART2BLE Brigde initializing...\n");
 
 
 	uart_init(client_uart_event_handle);

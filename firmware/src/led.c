@@ -71,8 +71,8 @@ void led_init()
 	nrf_gpio_cfg_output(TX_LED_PIN_NUMBER);
 	nrf_gpio_cfg_output(RX_LED_PIN_NUMBER);
 
-	led_off(TX_LED);
-	led_off(RX_LED);
+	nrf_gpio_pin_set(TX_LED_PIN_NUMBER);
+	nrf_gpio_pin_set(RX_LED_PIN_NUMBER);
 
 	err_code = app_timer_create(&m_tx_led_timer_id, APP_TIMER_MODE_SINGLE_SHOT, tx_led_blink_handler);
 	APP_ERROR_CHECK(err_code);

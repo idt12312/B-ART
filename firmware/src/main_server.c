@@ -19,7 +19,7 @@
 
 
 #ifdef DEBUG
-#define DBG(...) printf("" __VA_ARGS__)
+#define DBG(...) printf(__VA_ARGS__)
 #else
 #define DBG(...)
 #endif
@@ -99,7 +99,7 @@ static void services_init(uint8_t device_id)
 
 	// device id の設定
 	uart2bles_init.device_id = device_id;
-	DBG("[uart2bles] Device ID : %u\r\n", uart2bles_init.device_id);
+	DBG("[uart2bles] Device ID : %u\n", uart2bles_init.device_id);
 
 	err_code = ble_uart2bles_init(&m_uart2bles, &uart2bles_init);
 	APP_ERROR_CHECK(err_code);
@@ -392,7 +392,7 @@ void server_main(uint8_t device_id)
 	err_code = sd_ble_gap_tx_power_set(4);
 	APP_ERROR_CHECK(err_code);
 
-	DBG("ble2uart Service Start\r\n");
+	DBG("ble2uart Service Start\n");
 
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
 	APP_ERROR_CHECK(err_code);
