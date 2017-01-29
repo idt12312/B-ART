@@ -104,6 +104,11 @@ int main()
 
     DBG("\r\nUART2BLE Brigde initializing...\r\n");
 
+
+	uart_init(client_uart_event_handle);
+	client_main(1);
+
+    /*
     uint8_t device_id = get_device_id();
     if (get_mode() == 1) {
     	uart_init(server_uart_event_handle);
@@ -113,6 +118,7 @@ int main()
     	uart_init(client_uart_event_handle);
     	client_main(device_id);
     }
+    */
 
 	return 0;
 }

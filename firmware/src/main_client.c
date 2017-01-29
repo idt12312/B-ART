@@ -1,10 +1,3 @@
-/*
- * client_proc.c
- *
- *  Created on: 2017/01/25
- *      Author: idt12312
- */
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -306,6 +299,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
 	on_ble_evt(p_ble_evt);
+    ble_db_discovery_on_ble_evt(&m_ble_db_discovery, p_ble_evt);
 	ble_uart2bles_c_on_ble_evt(&m_ble_uart2bles_c,p_ble_evt);
 }
 
