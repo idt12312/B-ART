@@ -1,4 +1,4 @@
-update=2016年11月27日日曜日 01:06:10
+update=2017/01/26 21:02:39
 version=1
 last_client=kicad
 [pcbnew]
@@ -23,6 +23,8 @@ ModuleOutlineThickness=0.150000000000
 [cvpcb]
 version=1
 NetIExt=net
+[general]
+version=1
 [eeschema]
 version=1
 LibDir=
@@ -56,6 +58,4 @@ LibName26=opto
 LibName27=atmel
 LibName28=contrib
 LibName29=valves
-LibName30=lib/uart2ble_bridge
-[general]
-version=1
+LibName30=C:/Users/idt12312/Documents/works/uart2ble_bridge/pcb/lib/uart2ble_bridge
