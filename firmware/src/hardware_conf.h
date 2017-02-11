@@ -16,12 +16,20 @@
 #define	RTS_PIN_NUMBER	0
 #define	CTS_PIN_NUMBER	0
 
-#define DEVICEID_JUMPER1_PIN_NUMBER 3
-#define DEVICEID_JUMPER2_PIN_NUMBER 1
-#define DEVICEID_JUMPER3_PIN_NUMBER 2
+#define DEVICEID_BIT0_PIN_NUMBER 3
+#define DEVICEID_BIT1_PIN_NUMBER 2
+#define DEVICEID_BIT2_PIN_NUMBER 1
+#define DEVICE_MODE_PIN_NUMBER 0
+
+
+#define UART_TX_BUF_SIZE                512                                         /**< UART TX buffer size. */
+#define UART_RX_BUF_SIZE                512                                         /**< UART RX buffer size. */
+
 
 /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_PRESCALER 0
+
+#define APP_TIMER_OP_QUEUE_SIZE         4                                           /**< Size of timer operation queues. */
 
 
 #define NRF_CLOCK_LFCLKSRC      {.source        = NRF_CLOCK_LF_SRC_RC,            \

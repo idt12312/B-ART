@@ -11,14 +11,6 @@
 #include "ble_srv_common.h"
 #include "sdk_common.h"
 
-#define BLE_UUID_UART2BLE_TX_CHARACTERISTIC 0x0002                      /**< The UUID of the TX Characteristic. */
-#define BLE_UUID_UART2BLE_RX_CHARACTERISTIC 0x0003                      /**< The UUID of the RX Characteristic. */
-
-#define BLE_UART2BLE_MAX_RX_CHAR_LEN        BLE_UART2BLE_MAX_DATA_LEN        /**< Maximum length of the RX Characteristic (in bytes). */
-#define BLE_UART2BLE_MAX_TX_CHAR_LEN        BLE_UART2BLE_MAX_DATA_LEN        /**< Maximum length of the TX Characteristic (in bytes). */
-
-#define UART2BLE_BASE_UUID                  {{0x83, 0xE9, 0xE7, 0x69, 0xA2, 0x6C, 0xBE, 0xAD, 0x71, 0x4C, 0x04, 0xDA, 0x00, 0x00, 0x00, 0x20}} /**< Used vendor specific UUID. */
-
 
 static void on_connect(ble_uart2bles_t * p_uart2bles, ble_evt_t * p_ble_evt)
 {
@@ -93,7 +85,7 @@ static uint32_t rx_char_add(ble_uart2bles_t * p_uart2bles, const ble_uart2bles_i
     char_md.p_sccd_md         = NULL;
 
     ble_uuid.type = p_uart2bles->uuid_type;
-    ble_uuid.uuid = BLE_UUID_UART2BLE_RX_CHARACTERISTIC;
+    ble_uuid.uuid = BLE_UUID_UART2BLES_RX_CHARACTERISTIC;
 
     memset(&attr_md, 0, sizeof(attr_md));
 
@@ -111,7 +103,7 @@ static uint32_t rx_char_add(ble_uart2bles_t * p_uart2bles, const ble_uart2bles_i
     attr_char_value.p_attr_md = &attr_md;
     attr_char_value.init_len  = sizeof(uint8_t);
     attr_char_value.init_offs = 0;
-    attr_char_value.max_len   = BLE_UART2BLE_MAX_RX_CHAR_LEN;
+    attr_char_value.max_len   = BLE_UART2BLES_MAX_RX_CHAR_LEN;
 
     return sd_ble_gatts_characteristic_add(p_uart2bles->service_handle,
                                            &char_md,
@@ -139,7 +131,7 @@ static uint32_t tx_char_add(ble_uart2bles_t * p_uart2bles, const ble_uart2bles_i
     char_md.p_sccd_md                = NULL;
 
     ble_uuid.type = p_uart2bles->uuid_type;
-    ble_uuid.uuid = BLE_UUID_UART2BLE_TX_CHARACTERISTIC;
+    ble_uuid.uuid = BLE_UUID_UART2BLES_TX_CHARACTERISTIC;
 
     memset(&attr_md, 0, sizeof(attr_md));
 
@@ -157,7 +149,7 @@ static uint32_t tx_char_add(ble_uart2bles_t * p_uart2bles, const ble_uart2bles_i
     attr_char_value.p_attr_md = &attr_md;
     attr_char_value.init_len  = 1;
     attr_char_value.init_offs = 0;
-    attr_char_value.max_len   = BLE_UART2BLE_MAX_TX_CHAR_LEN;
+    attr_char_value.max_len   = BLE_UART2BLES_MAX_TX_CHAR_LEN;
 
     return sd_ble_gatts_characteristic_add(p_uart2bles->service_handle,
                                            &char_md,
@@ -198,7 +190,7 @@ uint32_t ble_uart2bles_init(ble_uart2bles_t * p_uart2bles, const ble_uart2bles_i
 {
     uint32_t      err_code;
     ble_uuid_t    ble_uuid;
-    ble_uuid128_t uart2bles_base_uuid = UART2BLE_BASE_UUID;
+    ble_uuid128_t uart2bles_base_uuid = UART2BLES_BASE_UUID;
 
     // device id をUUIDに埋め込み
     uart2bles_base_uuid.uuid128[14] = p_uart2bles_init->device_id;
@@ -217,7 +209,7 @@ uint32_t ble_uart2bles_init(ble_uart2bles_t * p_uart2bles, const ble_uart2bles_i
     VERIFY_SUCCESS(err_code);
 
     ble_uuid.type = p_uart2bles->uuid_type;
-    ble_uuid.uuid = BLE_UUID_UART2BLE_SERVICE;
+    ble_uuid.uuid = BLE_UUID_UART2BLES_SERVICE;
 
     // Add the service.
     err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
@@ -249,7 +241,7 @@ uint32_t ble_uart2bles_send(ble_uart2bles_t * p_uart2bles, uint8_t * p_data, uin
         return NRF_ERROR_INVALID_STATE;
     }
 
-    if (length > BLE_UART2BLE_MAX_DATA_LEN)
+    if (length > BLE_UART2BLES_MAX_DATA_LEN)
     {
         return NRF_ERROR_INVALID_PARAM;
     }
