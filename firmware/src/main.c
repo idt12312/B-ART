@@ -50,13 +50,13 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 static uint8_t get_device_id()
 {
 	uint8_t device_id = 0;
-	nrf_gpio_cfg_input(DEVICEID_JUMPER1_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
-	nrf_gpio_cfg_input(DEVICEID_JUMPER2_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
-	nrf_gpio_cfg_input(DEVICEID_JUMPER3_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(DEVICEID_BIT0_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(DEVICEID_BIT1_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(DEVICEID_BIT2_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
 
-	if (!nrf_gpio_pin_read(DEVICEID_JUMPER1_PIN_NUMBER)) device_id |= 0x01;
-	if (!nrf_gpio_pin_read(DEVICEID_JUMPER2_PIN_NUMBER)) device_id |= 0x02;
-	if (!nrf_gpio_pin_read(DEVICEID_JUMPER3_PIN_NUMBER)) device_id |= 0x04;
+	if (!nrf_gpio_pin_read(DEVICEID_BIT0_PIN_NUMBER)) device_id |= 0x01;
+	if (!nrf_gpio_pin_read(DEVICEID_BIT1_PIN_NUMBER)) device_id |= 0x02;
+	if (!nrf_gpio_pin_read(DEVICEID_BIT2_PIN_NUMBER)) device_id |= 0x04;
 
 	return device_id;
 }
@@ -64,9 +64,9 @@ static uint8_t get_device_id()
 
 static uint8_t get_mode()
 {
-	nrf_gpio_cfg_input(DEVICEID_JUMPER4_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(DEVICE_MODE_PIN_NUMBER, NRF_GPIO_PIN_PULLUP);
 
-	if (nrf_gpio_pin_read(DEVICEID_JUMPER4_PIN_NUMBER)) return 1;
+	if (!nrf_gpio_pin_read(DEVICE_MODE_PIN_NUMBER)) return 1;
 	else return 0;
 }
 
@@ -105,10 +105,6 @@ int main()
     DBG("\nUART2BLE Brigde initializing...\n");
 
 
-	uart_init(client_uart_event_handle);
-	client_main(1);
-
-    /*
     uint8_t device_id = get_device_id();
     if (get_mode() == 1) {
     	uart_init(server_uart_event_handle);
@@ -118,7 +114,7 @@ int main()
     	uart_init(client_uart_event_handle);
     	client_main(device_id);
     }
-    */
+
 
 	return 0;
 }

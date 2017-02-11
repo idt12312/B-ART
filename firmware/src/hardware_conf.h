@@ -16,10 +16,10 @@
 #define	RTS_PIN_NUMBER	0
 #define	CTS_PIN_NUMBER	0
 
-#define DEVICEID_JUMPER1_PIN_NUMBER 3
-#define DEVICEID_JUMPER2_PIN_NUMBER 1
-#define DEVICEID_JUMPER3_PIN_NUMBER 2
-#define DEVICEID_JUMPER4_PIN_NUMBER 2
+#define DEVICEID_BIT0_PIN_NUMBER 3
+#define DEVICEID_BIT1_PIN_NUMBER 2
+#define DEVICEID_BIT2_PIN_NUMBER 1
+#define DEVICE_MODE_PIN_NUMBER 0
 
 
 #define UART_TX_BUF_SIZE                512                                         /**< UART TX buffer size. */
