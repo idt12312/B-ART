@@ -158,9 +158,12 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 {
 	switch (ble_adv_evt) {
 	case BLE_ADV_EVT_FAST:
+		DBG("[ADV event] BLE_ADV_EVT_FAST\n");
 		break;
 	case BLE_ADV_EVT_IDLE:
-		sleep_mode_enter();
+		DBG("[ADV event] BLE_ADV_EVT_IDLE\n");
+		uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+		APP_ERROR_CHECK(err_code);
 		break;
 	default:
 		break;
