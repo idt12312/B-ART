@@ -319,6 +319,10 @@ void server_uart_event_handle(app_uart_evt_t * p_event)
 	switch (p_event->evt_type) {
 	case APP_UART_DATA_READY:
 		UNUSED_VARIABLE(app_uart_get(&data_array[index]));
+
+		// 未接続時はデータを無視
+		if (m_conn_handle == BLE_CONN_HANDLE_INVALID) break;
+
 		index++;
 
 		if ((data_array[index - 1] == '\n') || (index >= (BLE_UART2BLES_MAX_DATA_LEN))) {
