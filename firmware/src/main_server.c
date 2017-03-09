@@ -31,7 +31,7 @@
 #define PERIPHERAL_LINK_COUNT           1                                           /**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
 #define DEVICE_NAME                     "UART2BLE"                               /**< Name of device. Will be included in the advertising data. */
-#define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
+#define UART2BLES_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */
@@ -47,7 +47,7 @@
 static ble_uart2bles_t					m_uart2bles;
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
-static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_UART2BLES_SERVICE}};  /**< Universally unique service identifier. */
+static ble_uuid_t                       m_adv_uuids[] = {{.uuid = BLE_UUID_UART2BLES_SERVICE, .type = UART2BLES_SERVICE_UUID_TYPE}};
 
 
 
@@ -158,9 +158,12 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 {
 	switch (ble_adv_evt) {
 	case BLE_ADV_EVT_FAST:
+		DBG("[ADV event] BLE_ADV_EVT_FAST\n");
 		break;
 	case BLE_ADV_EVT_IDLE:
-		sleep_mode_enter();
+		DBG("[ADV event] BLE_ADV_EVT_IDLE\n");
+		uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+		APP_ERROR_CHECK(err_code);
 		break;
 	default:
 		break;
@@ -316,6 +319,10 @@ void server_uart_event_handle(app_uart_evt_t * p_event)
 	switch (p_event->evt_type) {
 	case APP_UART_DATA_READY:
 		UNUSED_VARIABLE(app_uart_get(&data_array[index]));
+
+		// 未接続時はデータを無視
+		if (m_conn_handle == BLE_CONN_HANDLE_INVALID) break;
+
 		index++;
 
 		if ((data_array[index - 1] == '\n') || (index >= (BLE_UART2BLES_MAX_DATA_LEN))) {
