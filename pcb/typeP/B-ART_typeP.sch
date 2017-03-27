@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:B-ART
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -28,18 +29,15 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
-LIBS:uart2ble_bridge
-LIBS:uart2ble_bridge-cache
-LIBS:uart2ble_bridge-rescue
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
-Title ""
-Date ""
-Rev ""
-Comp ""
+Title "B-ART_typeP"
+Date "2017-03-27"
+Rev "rev1"
+Comp "@idt12312"
 Comment1 ""
 Comment2 ""
 Comment3 ""
@@ -199,7 +197,7 @@ U 1 1 589B626F
 P 6450 4000
 F 0 "IC1" H 5900 4900 60  0000 C CNN
 F 1 "BVMCN5103-BK" H 6550 4900 60  0000 C CNN
-F 2 "uart2ble_bridge:BVMCN5103-BK" H 6300 3800 60  0001 C CNN
+F 2 "B-ART:BVMCN5103-BK" H 6300 3800 60  0001 C CNN
 F 3 "" H 6300 3800 60  0001 C CNN
 	1    6450 4000
 	1    0    0    -1  
@@ -310,7 +308,7 @@ U 1 1 589B6278
 P 7950 3450
 F 0 "SW1" V 7550 3350 60  0000 C CNN
 F 1 "DIPSW-4" V 7650 3450 60  0000 C CNN
-F 2 "uart2ble_bridge:DIPSW-4P" H 7950 3450 60  0001 C CNN
+F 2 "B-ART:DIPSW-4P" H 7950 3450 60  0001 C CNN
 F 3 "" H 7950 3450 60  0001 C CNN
 	1    7950 3450
 	0    1    1    0   
@@ -391,7 +389,7 @@ U 1 1 589B6288
 P 5450 4300
 F 0 "W3" H 5450 4570 50  0000 C CNN
 F 1 "SWDCLK" H 5450 4500 50  0000 C CNN
-F 2 "uart2ble_bridge:test_th_pad" H 5650 4300 50  0001 C CNN
+F 2 "B-ART:test_th_pad" H 5650 4300 50  0001 C CNN
 F 3 "" H 5650 4300 50  0000 C CNN
 	1    5450 4300
 	0    -1   -1   0   
@@ -402,7 +400,7 @@ U 1 1 589B6289
 P 5450 4400
 F 0 "W4" H 5450 4670 50  0000 C CNN
 F 1 "SWDIO" H 5450 4600 50  0000 C CNN
-F 2 "uart2ble_bridge:test_th_pad" H 5650 4400 50  0001 C CNN
+F 2 "B-ART:test_th_pad" H 5650 4400 50  0001 C CNN
 F 3 "" H 5650 4400 50  0000 C CNN
 	1    5450 4400
 	0    -1   -1   0   
@@ -417,7 +415,7 @@ U 1 1 589B628A
 P 5300 3300
 F 0 "W1" H 5300 3570 50  0000 C CNN
 F 1 "VCC" H 5300 3500 50  0000 C CNN
-F 2 "uart2ble_bridge:test_th_pad" H 5500 3300 50  0001 C CNN
+F 2 "B-ART:test_th_pad" H 5500 3300 50  0001 C CNN
 F 3 "" H 5500 3300 50  0000 C CNN
 	1    5300 3300
 	0    -1   -1   0   
@@ -428,7 +426,7 @@ U 1 1 589B628B
 P 5300 3600
 F 0 "W2" H 5300 3870 50  0000 C CNN
 F 1 "GND" H 5300 3800 50  0000 C CNN
-F 2 "uart2ble_bridge:test_th_pad" H 5500 3600 50  0001 C CNN
+F 2 "B-ART:test_th_pad" H 5500 3600 50  0001 C CNN
 F 3 "" H 5500 3600 50  0000 C CNN
 	1    5300 3600
 	0    -1   -1   0   

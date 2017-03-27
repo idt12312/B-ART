@@ -14,7 +14,7 @@
 
   (page A4)
   (title_block
-    (title uart2ble_bridge)
+    (title B-ART_typeP)
     (date 2016-11-27)
     (rev 1)
     (company idt12312)
@@ -434,7 +434,7 @@
     )
   )
 
-  (module uart2ble_bridge:BVMCN5103-BK (layer F.Cu) (tedit 5839ADF8) (tstamp 589B45B6)
+  (module B-ART:BVMCN5103-BK (layer F.Cu) (tedit 5839ADF8) (tstamp 589B45B6)
     (at 145.3 110.1)
     (path /589B626F)
     (fp_text reference IC1 (at -4.5 -12.25 90) (layer F.SilkS)
@@ -496,7 +496,7 @@
       (net 1 +3V3))
   )
 
-  (module uart2ble_bridge:DIPSW-4P (layer B.Cu) (tedit 589BC730) (tstamp 589B45C2)
+  (module B-ART:DIPSW-4P (layer B.Cu) (tedit 589BC730) (tstamp 589B45C2)
     (at 146.5 105.5 180)
     (path /589B6278)
     (fp_text reference SW1 (at 0.25 0.75 270) (layer B.SilkS)
@@ -541,7 +541,7 @@
       (net 2 GND))
   )
 
-  (module uart2ble_bridge:test_th_pad (layer B.Cu) (tedit 589BC920) (tstamp 589B45C7)
+  (module B-ART:test_th_pad (layer B.Cu) (tedit 589BC920) (tstamp 589B45C7)
     (at 141.5 101.75)
     (path /589B628A)
     (fp_text reference W1 (at 0 -0.5) (layer B.SilkS) hide
@@ -554,7 +554,7 @@
       (net 1 +3V3))
   )
 
-  (module uart2ble_bridge:test_th_pad (layer B.Cu) (tedit 589BC925) (tstamp 589B45CC)
+  (module B-ART:test_th_pad (layer B.Cu) (tedit 589BC925) (tstamp 589B45CC)
     (at 141.5 104.25)
     (path /589B628B)
     (fp_text reference W2 (at 0 -0.5) (layer B.SilkS) hide
@@ -567,7 +567,7 @@
       (net 2 GND))
   )
 
-  (module uart2ble_bridge:test_th_pad (layer B.Cu) (tedit 589BC929) (tstamp 589B45D1)
+  (module B-ART:test_th_pad (layer B.Cu) (tedit 589BC929) (tstamp 589B45D1)
     (at 141.5 106.75)
     (path /589B6288)
     (fp_text reference W3 (at 0 -0.5) (layer B.SilkS) hide
@@ -580,7 +580,7 @@
       (net 14 "Net-(IC1-Pad4)"))
   )
 
-  (module uart2ble_bridge:test_th_pad (layer B.Cu) (tedit 589BC92E) (tstamp 589B45D6)
+  (module B-ART:test_th_pad (layer B.Cu) (tedit 589BC92E) (tstamp 589B45D6)
     (at 141.5 109.25)
     (path /589B6289)
     (fp_text reference W4 (at 0 -0.5) (layer B.SilkS) hide

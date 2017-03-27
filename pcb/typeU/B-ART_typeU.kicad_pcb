@@ -528,7 +528,7 @@
     )
   )
 
-  (module uart2ble_bridge:BVMCN5103-BK (layer F.Cu) (tedit 5839ADF8) (tstamp 588AC34B)
+  (module B-ART:BVMCN5103-BK (layer F.Cu) (tedit 5839ADF8) (tstamp 588AC34B)
     (at 168.5 92.25)
     (path /5889F69D)
     (fp_text reference IC2 (at -4.5 -12.25 90) (layer F.SilkS)
@@ -722,7 +722,7 @@
     )
   )
 
-  (module uart2ble_bridge:DIPSW-4P (layer B.Cu) (tedit 589BCB10) (tstamp 588AC37F)
+  (module B-ART:DIPSW-4P (layer B.Cu) (tedit 589BCB10) (tstamp 588AC37F)
     (at 169.75 88.25 180)
     (path /588A4742)
     (fp_text reference SW1 (at 0.5 0.25 180) (layer B.SilkS)
@@ -767,7 +767,7 @@
       (net 2 GND))
   )
 
-  (module uart2ble_bridge:LXES11D (layer F.Cu) (tedit 589B4065) (tstamp 588AC389)
+  (module B-ART:LXES11D (layer F.Cu) (tedit 589B4065) (tstamp 588AC389)
     (at 168.25 100.5)
     (path /5889E772)
     (fp_text reference U1 (at -1.55 -0.1) (layer F.SilkS)
@@ -790,7 +790,7 @@
       (net 2 GND))
   )
 
-  (module uart2ble_bridge:USB_A_plug (layer F.Cu) (tedit 589B4031) (tstamp 588C7CCE)
+  (module B-ART:USB_A_plug (layer F.Cu) (tedit 589B4031) (tstamp 588C7CCE)
     (at 168.5 105.1)
     (path /588C7ED4)
     (fp_text reference P1 (at -4.2 2.1 180) (layer F.SilkS)
@@ -822,7 +822,7 @@
       (net 1 "Net-(C1-Pad1)"))
   )
 
-  (module uart2ble_bridge:test_th_pad (layer B.Cu) (tedit 589BCB20) (tstamp 588C823D)
+  (module B-ART:test_th_pad (layer B.Cu) (tedit 589BCB20) (tstamp 588C823D)
     (at 164.5 83.5 180)
     (path /588B38D1)
     (fp_text reference W1 (at 0 -0.5 180) (layer B.SilkS) hide
@@ -835,7 +835,7 @@
       (net 4 +3V3))
   )
 
-  (module uart2ble_bridge:test_th_pad (layer B.Cu) (tedit 589BCB25) (tstamp 588C8242)
+  (module B-ART:test_th_pad (layer B.Cu) (tedit 589BCB25) (tstamp 588C8242)
     (at 164.5 86)
     (path /588B393A)
     (fp_text reference W2 (at 0 -0.5) (layer B.SilkS) hide
@@ -848,7 +848,7 @@
       (net 2 GND))
   )
 
-  (module uart2ble_bridge:test_th_pad (layer B.Cu) (tedit 589BCB2A) (tstamp 588C8247)
+  (module B-ART:test_th_pad (layer B.Cu) (tedit 589BCB2A) (tstamp 588C8247)
     (at 164.5 88.5)
     (path /588B28B8)
     (fp_text reference W3 (at 0 -0.5) (layer B.SilkS) hide
@@ -861,7 +861,7 @@
       (net 19 "Net-(IC2-Pad4)"))
   )
 
-  (module uart2ble_bridge:test_th_pad (layer B.Cu) (tedit 589BCB2E) (tstamp 588C824C)
+  (module B-ART:test_th_pad (layer B.Cu) (tedit 589BCB2E) (tstamp 588C824C)
     (at 164.5 91)
     (path /588B291E)
     (fp_text reference W4 (at 0 -0.5) (layer B.SilkS) hide
