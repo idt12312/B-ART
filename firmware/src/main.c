@@ -102,7 +102,7 @@ int main()
     SEGGER_RTT_Init();
     led_init();
 
-    DBG("\nUART2BLE Brigde initializing...\n");
+    DBG("\nB-ART initializing...\n");
 
 
     uint8_t device_id = get_device_id();

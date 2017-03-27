@@ -13,7 +13,7 @@
 #include "nrf_gpio.h"
 
 #include "SEGGER_RTT.h"
-#include "ble_uart2bles.h"
+#include "ble_barts.h"
 #include "hardware_conf.h"
 #include "led.h"
 
@@ -30,8 +30,8 @@
 #define CENTRAL_LINK_COUNT              0                                           /**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
 #define PERIPHERAL_LINK_COUNT           1                                           /**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
-#define DEVICE_NAME                     "UART2BLE"                               /**< Name of device. Will be included in the advertising data. */
-#define UART2BLES_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
+#define DEVICE_NAME                     "BART"                               /**< Name of device. Will be included in the advertising data. */
+#define BARTS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */
@@ -44,10 +44,10 @@
 #define NEXT_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(30000, APP_TIMER_PRESCALER) /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
 
-static ble_uart2bles_t					m_uart2bles;
+static ble_barts_t					m_barts;
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
-static ble_uuid_t                       m_adv_uuids[] = {{.uuid = BLE_UUID_UART2BLES_SERVICE, .type = UART2BLES_SERVICE_UUID_TYPE}};
+static ble_uuid_t                       m_adv_uuids[] = {{.uuid = BLE_UUID_BARTS_SERVICE, .type = BARTS_SERVICE_UUID_TYPE}};
 
 
 
@@ -77,7 +77,7 @@ static void gap_params_init(void)
 }
 
 
-static void uart2bles_data_handler(ble_uart2bles_t * p_uart2bles, uint8_t * p_data, uint16_t length)
+static void barts_data_handler(ble_barts_t * p_barts, uint8_t * p_data, uint16_t length)
 {
 	DBG("[UART send]");
 	for (uint32_t i = 0; i < length; i++) {
@@ -91,17 +91,17 @@ static void uart2bles_data_handler(ble_uart2bles_t * p_uart2bles, uint8_t * p_da
 static void services_init(uint8_t device_id)
 {
 	uint32_t       err_code;
-	ble_uart2bles_init_t uart2bles_init;
+	ble_barts_init_t barts_init;
 
-	memset(&uart2bles_init, 0, sizeof(uart2bles_init));
+	memset(&barts_init, 0, sizeof(barts_init));
 
-	uart2bles_init.data_handler = uart2bles_data_handler;
+	barts_init.data_handler = barts_data_handler;
 
 	// device id の設定
-	uart2bles_init.device_id = device_id;
-	DBG("[uart2bles] Device ID : %u\n", uart2bles_init.device_id);
+	barts_init.device_id = device_id;
+	DBG("[barts] Device ID : %u\n", barts_init.device_id);
 
-	err_code = ble_uart2bles_init(&m_uart2bles, &uart2bles_init);
+	err_code = ble_barts_init(&m_barts, &barts_init);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -140,16 +140,6 @@ static void conn_params_init(void)
 	cp_init.error_handler                  = conn_params_error_handler;
 
 	err_code = ble_conn_params_init(&cp_init);
-	APP_ERROR_CHECK(err_code);
-}
-
-
-static void sleep_mode_enter(void)
-{
-	uint32_t err_code;
-
-	// Go to system-off mode (this function will not return; wakeup will cause a reset).
-	err_code = sd_power_system_off();
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -276,7 +266,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
 	ble_conn_params_on_ble_evt(p_ble_evt);
 	on_ble_evt(p_ble_evt);
-	ble_uart2bles_on_ble_evt(&m_uart2bles, p_ble_evt);
+	ble_barts_on_ble_evt(&m_barts, p_ble_evt);
 	ble_advertising_on_ble_evt(p_ble_evt);
 
 }
@@ -312,7 +302,7 @@ static void ble_stack_init(void)
 
 void server_uart_event_handle(app_uart_evt_t * p_event)
 {
-	static uint8_t data_array[BLE_UART2BLES_MAX_DATA_LEN];
+	static uint8_t data_array[BLE_BARTS_MAX_DATA_LEN];
 	static uint8_t index = 0;
 	uint32_t       err_code;
 
@@ -325,13 +315,13 @@ void server_uart_event_handle(app_uart_evt_t * p_event)
 
 		index++;
 
-		if ((data_array[index - 1] == '\n') || (index >= (BLE_UART2BLES_MAX_DATA_LEN))) {
+		if ((data_array[index - 1] == '\n') || (index >= (BLE_BARTS_MAX_DATA_LEN))) {
 			DBG("[UART receive]");
 			for (int i=0;i<index;i++) {
 				DBG("%02x",data_array[i]);
 			}
 			DBG("\n");
-			err_code = ble_uart2bles_send(&m_uart2bles, data_array, index);
+			err_code = ble_barts_send(&m_barts, data_array, index);
 			led_blink(TX_LED);
 			if (err_code != NRF_ERROR_INVALID_STATE) {
 				APP_ERROR_CHECK(err_code);

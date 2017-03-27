@@ -13,7 +13,7 @@
 #include "ble_hci.h"
 #include "softdevice_handler.h"
 #include "ble_advdata.h"
-#include "ble_uart2bles_c.h"
+#include "ble_barts_c.h"
 
 #include "hardware_conf.h"
 #include "led.h"
@@ -29,7 +29,7 @@
 #define CENTRAL_LINK_COUNT      1                               /**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
 #define PERIPHERAL_LINK_COUNT   0                               /**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
-#define UART2BLES_SERVICE_UUID_TYPE   BLE_UUID_TYPE_VENDOR_BEGIN      /**< UUID type for the Nordic UART Service (vendor specific). */
+#define BARTS_SERVICE_UUID_TYPE   BLE_UUID_TYPE_VENDOR_BEGIN      /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define SCAN_INTERVAL           0x00A0                          /**< Determines scan interval in units of 0.625 millisecond. */
 #define SCAN_WINDOW             0x0050                          /**< Determines scan window in units of 0.625 millisecond. */
@@ -46,7 +46,7 @@
 #define UUID32_SIZE             4                               /**< Size of 32 bit UUID */
 #define UUID128_SIZE            16                              /**< Size of 128 bit UUID */
 
-static ble_uart2bles_c_t              m_ble_uart2bles_c;                    /**< Instance of UART2BLES service. Must be passed to all UART2BLES_C API calls. */
+static ble_barts_c_t              m_ble_barts_c;                    /**< Instance of BARTS service. Must be passed to all BARTS_C API calls. */
 static ble_db_discovery_t       m_ble_db_discovery;             /**< Instance of database discovery module. Must be passed to all db_discovert API calls */
 
 
@@ -68,10 +68,10 @@ static const ble_gap_scan_params_t m_scan_params =
 		.timeout     = SCAN_TIMEOUT
 };
 
-static const ble_uuid_t m_uart2bles_uuid =
+static const ble_uuid_t m_barts_uuid =
 {
-		.uuid = BLE_UUID_UART2BLES_SERVICE,
-		.type = UART2BLES_SERVICE_UUID_TYPE
+		.uuid = BLE_UUID_BARTS_SERVICE,
+		.type = BARTS_SERVICE_UUID_TYPE
 };
 
 
@@ -87,13 +87,13 @@ static void scan_start(void)
 
 static void db_disc_handler(ble_db_discovery_evt_t * p_evt)
 {
-	ble_uart2bles_c_on_db_disc_evt(&m_ble_uart2bles_c, p_evt);
+	ble_barts_c_on_db_disc_evt(&m_ble_barts_c, p_evt);
 }
 
 
 void client_uart_event_handle(app_uart_evt_t * p_event)
 {
-	static uint8_t data_array[BLE_UART2BLES_MAX_DATA_LEN];
+	static uint8_t data_array[BLE_BARTS_MAX_DATA_LEN];
 	static uint8_t index = 0;
 	uint32_t       err_code;
 
@@ -102,17 +102,17 @@ void client_uart_event_handle(app_uart_evt_t * p_event)
 		UNUSED_VARIABLE(app_uart_get(&data_array[index]));
 
 		// 未接続時はデータを無視
-		if (m_ble_uart2bles_c.conn_handle == BLE_CONN_HANDLE_INVALID) break;
+		if (m_ble_barts_c.conn_handle == BLE_CONN_HANDLE_INVALID) break;
 
 		index++;
 
-		if ((data_array[index - 1] == '\n') || (index >= (BLE_UART2BLES_MAX_DATA_LEN))) {
+		if ((data_array[index - 1] == '\n') || (index >= (BLE_BARTS_MAX_DATA_LEN))) {
 			DBG("[UART receive]");
 			for (int i=0;i<index;i++) {
 				DBG("%02x",data_array[i]);
 			}
 			DBG("\n");
-			err_code = ble_uart2bles_c_send(&m_ble_uart2bles_c, data_array, index);
+			err_code = ble_barts_c_send(&m_ble_barts_c, data_array, index);
 			led_blink(TX_LED);
 			if (err_code != NRF_ERROR_INVALID_STATE) {
 				APP_ERROR_CHECK(err_code);
@@ -135,30 +135,30 @@ void client_uart_event_handle(app_uart_evt_t * p_event)
 }
 
 
-static void ble_uart2bles_c_evt_handler(ble_uart2bles_c_t * p_ble_uart2bles_c, const ble_uart2bles_c_evt_t * p_ble_uart2bles_evt)
+static void ble_barts_c_evt_handler(ble_barts_c_t * p_ble_barts_c, const ble_barts_c_evt_t * p_ble_barts_evt)
 {
 	uint32_t err_code;
-	switch (p_ble_uart2bles_evt->evt_type) {
-	case BLE_UART2BLES_C_EVT_DISCOVERY_COMPLETE:
-		err_code = ble_uart2bles_c_handles_assign(p_ble_uart2bles_c, p_ble_uart2bles_evt->conn_handle, &p_ble_uart2bles_evt->handles);
+	switch (p_ble_barts_evt->evt_type) {
+	case BLE_BARTS_C_EVT_DISCOVERY_COMPLETE:
+		err_code = ble_barts_c_handles_assign(p_ble_barts_c, p_ble_barts_evt->conn_handle, &p_ble_barts_evt->handles);
 		APP_ERROR_CHECK(err_code);
 
-		err_code = ble_uart2bles_c_rx_notif_enable(p_ble_uart2bles_c);
+		err_code = ble_barts_c_rx_notif_enable(p_ble_barts_c);
 		APP_ERROR_CHECK(err_code);
-		DBG("The device has the UART2BLE Service\n");
+		DBG("The device has the BART Service\n");
 		break;
 
-	case BLE_UART2BLES_C_EVT_UART2BLES_RX_EVT:
+	case BLE_BARTS_C_EVT_BARTS_RX_EVT:
 		DBG("[UART send]");
 		led_blink(RX_LED);
-		for (uint32_t i = 0; i < p_ble_uart2bles_evt->data_len; i++) {
-			DBG("%c", p_ble_uart2bles_evt->p_data[i]);
-			while(app_uart_put( p_ble_uart2bles_evt->p_data[i]) != NRF_SUCCESS);
+		for (uint32_t i = 0; i < p_ble_barts_evt->data_len; i++) {
+			DBG("%c", p_ble_barts_evt->p_data[i]);
+			while(app_uart_put( p_ble_barts_evt->p_data[i]) != NRF_SUCCESS);
 		}
 		DBG("\n");
 		break;
 
-	case BLE_UART2BLES_C_EVT_DISCONNECTED:
+	case BLE_BARTS_C_EVT_DISCONNECTED:
 		DBG("Disconnected\n");
 		led_off(TX_LED);
 		led_on(RX_LED);
@@ -253,7 +253,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
 		const ble_gap_evt_adv_report_t * p_adv_report = &p_gap_evt->params.adv_report;
 
-		if (is_uuid_present(&m_uart2bles_uuid, p_adv_report))
+		if (is_uuid_present(&m_barts_uuid, p_adv_report))
 		{
 
 			err_code = sd_ble_gap_connect(&p_adv_report->peer_addr,
@@ -282,7 +282,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 		led_blink(TX_LED);
 		led_blink(RX_LED);
 
-		// start discovery of services. The UART2BLES Client waits for a discovery result
+		// start discovery of services. The BARTS Client waits for a discovery result
 		err_code = ble_db_discovery_start(&m_ble_db_discovery, p_ble_evt->evt.gap_evt.conn_handle);
 		APP_ERROR_CHECK(err_code);
 		break;
@@ -323,7 +323,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
 	on_ble_evt(p_ble_evt);
     ble_db_discovery_on_ble_evt(&m_ble_db_discovery, p_ble_evt);
-	ble_uart2bles_c_on_ble_evt(&m_ble_uart2bles_c,p_ble_evt);
+	ble_barts_c_on_ble_evt(&m_ble_barts_c,p_ble_evt);
 }
 
 
@@ -358,14 +358,14 @@ static void ble_stack_init(void)
 static void services_init(uint8_t device_id)
 {
 	uint32_t         err_code;
-	ble_uart2bles_c_init_t uart2bles_c_init_t;
+	ble_barts_c_init_t barts_c_init_t;
 
-	uart2bles_c_init_t.evt_handler = ble_uart2bles_c_evt_handler;
+	barts_c_init_t.evt_handler = ble_barts_c_evt_handler;
 
-	uart2bles_c_init_t.device_id = device_id;
-	DBG("[uart2bles] Device ID : %u\n", uart2bles_c_init_t.device_id);
+	barts_c_init_t.device_id = device_id;
+	DBG("[barts] Device ID : %u\n", barts_c_init_t.device_id);
 
-	err_code = ble_uart2bles_c_init(&m_ble_uart2bles_c, &uart2bles_c_init_t);
+	err_code = ble_barts_c_init(&m_ble_barts_c, &barts_c_init_t);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -386,7 +386,7 @@ void client_main(uint8_t device_id)
 	services_init(device_id);
 
 	// Start scanning for peripherals and initiate connection
-	// with devices that advertise UART2BLES UUID.
+	// with devices that advertise BARTS UUID.
 	scan_start();
 	DBG("Scan started\n");
 
