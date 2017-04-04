@@ -5,10 +5,10 @@ B-ARTはXbee ZigBeeモジュールみたいにUARTを無線で飛ばすモジュ
 
 非常に小さいことが特徴で、**開発中の基板に挿して簡単に使える無線モジュール**をコンセプトに開発をしています。
 (現状、秋月で買えるどの無線モジュールよりも小さいはず)
+https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_mouse.jpg
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_overview1.jpg)
 
-![](https://github.com/idt12312/B-ART/images/bart_overview1.jpg)
-
-![](https://github.com/idt12312/B-ART/images/bart_overview2.jpg)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_overview2.jpg)
 
 B-ARTにはType-PとType-Uの2種類があり、Type-Pはピンヘッダ、Type-UはUSBコネクタがついています。
 Type-Pには4pinのピンヘッダが付いていて、3.3V-GND-TX-RX
@@ -17,7 +17,7 @@ Type-UにはPCに直接挿せるUSBコネクタと、FTDIのUSB-UART変換IC(FT2
 FT234XDのおかげでPCにさすとシリアルポートとして認識されるので、
 普段シリアルポートを使うときと全く変わることなく使うことができます。
 
-![](https://github.com/idt12312/B-ART/images/bart_pc.jpg)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_pc.jpg)
 
 B-ARTの裏面にはType-P、Type-UともにDIPスイッチがあり、そこからIDを設定できます。
 IDが同じ相手を選択して通信をするので、同じ環境にB-ARTが何組もあってもIDさえ違えば混線が起きないようになっています。
@@ -29,7 +29,7 @@ IDが同じ相手を選択して通信をするので、同じ環境にB-ARTが�
 下の写真は現在制作中のマイクロマウスの機体[MIZUHOv2](http://idken.net/posts/2017-04-01-mizuhov2/)に
 B-ART TypePを挿しているところです。
 
-![](https://github.com/idt12312/B-ART/images/bart_mouse.jpg)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_mouse.jpg)
 
 B-ARTは非常に小さく軽いので、マイクロマウスの機体に乗せても走行時にそれほど問題にはなりません。
 基板に4pinのコネクタさえつけておけばほしい時にだけB-ARTを挿して使うことができます。
@@ -63,7 +63,7 @@ B-ARTは通信においてはType-PであるかType-Uであるかは関係なく
 ## TypePのセットアップ
 4pinのピンヘッダ(というよりスルーホール)があり、それぞれのpinは次のような意味を持っています。
 
-![](https://github.com/idt12312/B-ART/images/bart_pin.jpg)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_pin.jpg)
 
 B-ARTは最大30mAくらいの電流を必要とするので、それに耐えられるような電源につないでください。
 
@@ -93,26 +93,26 @@ UARTにデータを流すとサーバー側、クライアント側どちらか�
 
 回路図
 
-![](https://github.com/idt12312/B-ART/images/bart_p_sch.png)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_p_sch.png)
 
 
 アートワーク
 
-![](https://github.com/idt12312/B-ART/images/bart_p_pcb.png)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_p_pcb.png)
 
 ### TypeU
 
 USB周りの回路図
 
-![](https://github.com/idt12312/B-ART/images/bart_u_sch1.png)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_u_sch1.png)
 
 マイコン周りの回路図
 
-![](https://github.com/idt12312/B-ART/images/bart_u_sch2.png)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_u_sch2.png)
 
 アートワーク
 
-![](https://github.com/idt12312/B-ART/images/bart_u_pcb.png)
+![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_u_pcb.png)
 
 
 # ファームウェア
