@@ -5,7 +5,7 @@ B-ARTはXbee ZigBeeモジュールみたいにUARTを無線で飛ばすモジュ
 
 非常に小さいことが特徴で、**開発中の基板に挿して簡単に使える無線モジュール**をコンセプトに開発をしています。
 (現状、秋月で買えるどの無線モジュールよりも小さいはず)
-https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_mouse.jpg
+
 ![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_overview1.jpg)
 
 ![](https://raw.githubusercontent.com/idt12312/B-ART/doc/doc/bart_overview2.jpg)
