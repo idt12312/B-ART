@@ -33,11 +33,11 @@
 #define DEVICE_NAME                     "BART"                               /**< Name of device. Will be included in the advertising data. */
 #define BARTS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
-#define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */
+#define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 100 ms). */
+#define APP_ADV_TIMEOUT_IN_SECONDS      180                                         	/**< The advertising timeout (in units of seconds). */
 
-#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
-#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
+#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(7.5, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (7.5 ms), Connection interval uses 1.25 ms units. */
+#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
 #define SLAVE_LATENCY                   0                                           /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
 #define FIRST_CONN_PARAMS_UPDATE_DELAY  APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER)  /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
@@ -290,8 +290,25 @@ static void ble_stack_init(void)
 	//Check the ram settings against the used number of links
 	CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
 
+	// 各Bandwidthの許容する接続数を設定
+	ble_conn_bw_counts_t bw_counts = {
+			.tx_counts = {.high_count=1, .mid_count=0, .low_count=0},
+			.rx_counts = {.high_count=1, .mid_count=0, .low_count=0}
+	};
+	ble_enable_params.common_enable_params.p_conn_bw_counts = &bw_counts;
+
 	// Enable BLE stack.
 	err_code = softdevice_enable(&ble_enable_params);
+	APP_ERROR_CHECK(err_code);
+
+	// Bandwidthをhihgに設定
+	ble_opt_t ble_opt;
+	memset(&ble_opt, 0x00, sizeof(ble_opt));
+	ble_opt.common_opt.conn_bw.conn_bw.conn_bw_tx = BLE_CONN_BW_HIGH;
+	ble_opt.common_opt.conn_bw.conn_bw.conn_bw_rx = BLE_CONN_BW_HIGH;
+	ble_opt.common_opt.conn_bw.role = BLE_GAP_ROLE_PERIPH;
+
+	err_code = sd_ble_opt_set(BLE_COMMON_OPT_CONN_BW, &ble_opt);
 	APP_ERROR_CHECK(err_code);
 
 	// Subscribe for BLE events.

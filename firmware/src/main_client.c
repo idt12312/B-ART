@@ -37,8 +37,8 @@
 #define SCAN_SELECTIVE          0                               /**< If 1, ignore unknown devices (non whitelisted). */
 #define SCAN_TIMEOUT            0x0000                          /**< Timout when scanning. 0x0000 disables timeout. */
 
-#define MIN_CONNECTION_INTERVAL MSEC_TO_UNITS(20, UNIT_1_25_MS) /**< Determines minimum connection interval in millisecond. */
-#define MAX_CONNECTION_INTERVAL MSEC_TO_UNITS(75, UNIT_1_25_MS) /**< Determines maximum connection interval in millisecond. */
+#define MIN_CONNECTION_INTERVAL MSEC_TO_UNITS(7.5, UNIT_1_25_MS) /**< Determines minimum connection interval in millisecond. */
+#define MAX_CONNECTION_INTERVAL MSEC_TO_UNITS(20, UNIT_1_25_MS) /**< Determines maximum connection interval in millisecond. */
 #define SLAVE_LATENCY           0                               /**< Determines slave latency in counts of connection events. */
 #define SUPERVISION_TIMEOUT     MSEC_TO_UNITS(4000, UNIT_10_MS) /**< Determines supervision time-out in units of 10 millisecond. */
 
@@ -345,8 +345,25 @@ static void ble_stack_init(void)
 	//Check the ram settings against the used number of links
 	CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
 
+	// 各Bandwidthの許容する接続数を設定
+	ble_conn_bw_counts_t bw_counts = {
+			.tx_counts = {.high_count=1, .mid_count=0, .low_count=0},
+			.rx_counts = {.high_count=1, .mid_count=0, .low_count=0}
+	};
+	ble_enable_params.common_enable_params.p_conn_bw_counts = &bw_counts;
+
 	// Enable BLE stack.
 	err_code = softdevice_enable(&ble_enable_params);
+	APP_ERROR_CHECK(err_code);
+
+	// Bandwidthをhihgに設定
+	ble_opt_t ble_opt;
+	memset(&ble_opt, 0x00, sizeof(ble_opt));
+	ble_opt.common_opt.conn_bw.conn_bw.conn_bw_tx = BLE_CONN_BW_HIGH;
+	ble_opt.common_opt.conn_bw.conn_bw.conn_bw_rx = BLE_CONN_BW_HIGH;
+	ble_opt.common_opt.conn_bw.role = BLE_GAP_ROLE_CENTRAL;
+
+	err_code = sd_ble_opt_set(BLE_COMMON_OPT_CONN_BW, &ble_opt);
 	APP_ERROR_CHECK(err_code);
 
 	// Register with the SoftDevice handler module for BLE events.
