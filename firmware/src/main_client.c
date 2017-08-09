@@ -14,6 +14,8 @@
 #include "softdevice_handler.h"
 #include "ble_advdata.h"
 #include "ble_barts_c.h"
+#include "app_fifo.h"
+#include "nrf_drv_clock.h"
 
 #include "hardware_conf.h"
 #include "led.h"
@@ -75,6 +77,52 @@ static const ble_uuid_t m_barts_uuid =
 };
 
 
+extern uint8_t uart_rcv_buff[UART_RCV_BUF_SIZE];
+extern app_fifo_t uart_rcv_fifo;
+
+static uint8_t ble_send_buf[20];
+static uint32_t ble_to_send_size;
+static bool is_remain_ble_to_send = false;
+static bool is_ble_sending = false;
+static bool is_ble_send_req = false;
+
+
+static void transfer_data_from_uart_buf_to_ble()
+{
+	uint32_t err_code;
+
+	while (1) {
+		if (!is_remain_ble_to_send) {
+			ble_to_send_size = 20;
+			app_fifo_read(&uart_rcv_fifo, ble_send_buf, &ble_to_send_size);
+			if (ble_to_send_size == 0) break;
+		}
+
+		DBG("[BLE send]");
+		for (int i=0;i<ble_to_send_size;i++) {
+			DBG("%02x",ble_send_buf[i]);
+		}
+		DBG("\n");
+
+		err_code = ble_barts_c_send(&m_ble_barts_c, ble_send_buf, ble_to_send_size);
+
+		if (err_code == NRF_SUCCESS) {
+			DBG("[BLE send] success\n");
+			is_remain_ble_to_send = false;
+		}
+		else if (err_code == BLE_ERROR_NO_TX_PACKETS || NRF_ERROR_BUSY) {
+			DBG("[BLE send] buffer full\n");
+			is_remain_ble_to_send = true;
+			break;
+		}
+		else if (err_code != NRF_ERROR_INVALID_STATE) {
+			is_remain_ble_to_send = true;
+			APP_ERROR_CHECK(err_code);
+			break;
+		}
+	}
+
+}
 
 static void scan_start(void)
 {
@@ -93,32 +141,21 @@ static void db_disc_handler(ble_db_discovery_evt_t * p_evt)
 
 void client_uart_event_handle(app_uart_evt_t * p_event)
 {
-	static uint8_t data_array[BLE_BARTS_MAX_DATA_LEN];
-	static uint8_t index = 0;
-	uint32_t       err_code;
+	uint8_t rcv_data;
 
 	switch (p_event->evt_type) {
 	case APP_UART_DATA_READY:
-		UNUSED_VARIABLE(app_uart_get(&data_array[index]));
+		app_uart_get(&rcv_data);
 
 		// 未接続時はデータを無視
 		if (m_ble_barts_c.conn_handle == BLE_CONN_HANDLE_INVALID) break;
 
-		index++;
+		app_fifo_put(&uart_rcv_fifo, rcv_data);
 
-		if ((data_array[index - 1] == '\n') || (index >= (BLE_BARTS_MAX_DATA_LEN))) {
-			DBG("[UART receive]");
-			for (int i=0;i<index;i++) {
-				DBG("%02x",data_array[i]);
-			}
-			DBG("\n");
-			err_code = ble_barts_c_send(&m_ble_barts_c, data_array, index);
-			led_blink(TX_LED);
-			if (err_code != NRF_ERROR_INVALID_STATE) {
-				APP_ERROR_CHECK(err_code);
-			}
-			index = 0;
+		if (!is_ble_sending) {
+			is_ble_send_req = true;
 		}
+
 		break;
 
 	case APP_UART_COMMUNICATION_ERROR:
@@ -244,6 +281,7 @@ static bool is_uuid_present(const ble_uuid_t *p_target_uuid,
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
 	uint32_t              err_code;
+	uint8_t dummy;
 	const ble_gap_evt_t * p_gap_evt = &p_ble_evt->evt.gap_evt;
 
 	switch (p_ble_evt->header.evt_id) {
@@ -311,6 +349,17 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 		err_code = sd_ble_gap_conn_param_update(p_gap_evt->conn_handle,
 				&p_gap_evt->params.conn_param_update_request.conn_params);
 		APP_ERROR_CHECK(err_code);
+		break;
+
+	case BLE_EVT_TX_COMPLETE:
+		led_blink(TX_LED);
+		// fifoにデータが残っている
+		if (app_fifo_peek(&uart_rcv_fifo, 0, &dummy) == NRF_SUCCESS) {
+			transfer_data_from_uart_buf_to_ble();
+		}
+		else {
+			is_ble_sending = false;
+		}
 		break;
 
 	default:
@@ -386,20 +435,44 @@ static void services_init(uint8_t device_id)
 	APP_ERROR_CHECK(err_code);
 }
 
-
 static void db_discovery_init(void)
 {
 	uint32_t err_code = ble_db_discovery_init(db_disc_handler);
 	APP_ERROR_CHECK(err_code);
 }
 
+static void clock_init()
+{
+	// 外部のXTALを起動
+	uint32_t err_code = nrf_drv_clock_init();
+	APP_ERROR_CHECK(err_code);
+
+	nrf_clock_hfclk_t clk_src = nrf_clock_hf_src_get();
+	if (clk_src == NRF_CLOCK_HFCLK_LOW_ACCURACY) {
+		DBG("NRF_CLOCK_HFCLK_LOW_ACCURACY\n");
+	}
+	else {
+		DBG("NRF_CLOCK_HFCLK_HIGH_ACCURACY\n");
+	}
+
+	if (nrf_clock_hf_is_running(NRF_CLOCK_HFCLK_LOW_ACCURACY)) {
+		DBG("LOW RUNNING\n");
+	}
+
+	if (nrf_clock_hf_is_running(NRF_CLOCK_HFCLK_HIGH_ACCURACY)) {
+		DBG("HIGH RUNNING\n");
+	}
+}
 
 void client_main(uint8_t device_id)
 {
 	uint32_t err_code;
 
+	app_fifo_init(&uart_rcv_fifo, uart_rcv_buff, UART_RCV_BUF_SIZE);
+
 	db_discovery_init();
 	ble_stack_init();
+	clock_init();
 	services_init(device_id);
 
 	// Start scanning for peripherals and initiate connection
@@ -415,6 +488,11 @@ void client_main(uint8_t device_id)
 	led_on(RX_LED);
 
 	while (1) {
+		if (is_ble_send_req) {
+			is_ble_send_req = false;
+			transfer_data_from_uart_buf_to_ble();
+			is_ble_sending = true;
+		}
 		uint32_t err_code = sd_app_evt_wait();
 		APP_ERROR_CHECK(err_code);
 	}
