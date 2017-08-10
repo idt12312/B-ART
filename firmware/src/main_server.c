@@ -11,6 +11,7 @@
 #include "app_uart.h"
 #include "app_util_platform.h"
 #include "nrf_gpio.h"
+#include "nrf_drv_clock.h"
 
 #include "SEGGER_RTT.h"
 #include "ble_barts.h"
@@ -391,12 +392,35 @@ static void advertising_init(void)
 	APP_ERROR_CHECK(err_code);
 }
 
+static void clock_init()
+{
+	// 外部のXTALを起動
+	uint32_t err_code = nrf_drv_clock_init();
+	APP_ERROR_CHECK(err_code);
+
+	nrf_clock_hfclk_t clk_src = nrf_clock_hf_src_get();
+	if (clk_src == NRF_CLOCK_HFCLK_LOW_ACCURACY) {
+		DBG("NRF_CLOCK_HFCLK_LOW_ACCURACY\n");
+	}
+	else {
+		DBG("NRF_CLOCK_HFCLK_HIGH_ACCURACY\n");
+	}
+
+	if (nrf_clock_hf_is_running(NRF_CLOCK_HFCLK_LOW_ACCURACY)) {
+		DBG("LOW RUNNING\n");
+	}
+
+	if (nrf_clock_hf_is_running(NRF_CLOCK_HFCLK_HIGH_ACCURACY)) {
+		DBG("HIGH RUNNING\n");
+	}
+}
 
 void server_main(uint8_t device_id)
 {
 	uint32_t err_code;
 
 	ble_stack_init();
+	clock_init();
 	gap_params_init();
 	services_init(device_id);
 	advertising_init();
