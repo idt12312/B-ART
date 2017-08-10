@@ -10,6 +10,7 @@
 #include "app_timer.h"
 #include "app_uart.h"
 #include "nrf_gpio.h"
+#include "app_fifo.h"
 
 #include "SEGGER_RTT.h"
 #include "hardware_conf.h"
@@ -25,6 +26,8 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+uint8_t uart_rcv_buff[UART_RCV_BUF_SIZE];
+app_fifo_t uart_rcv_fifo;
 
 extern void server_main(uint8_t device_id);
 extern void client_main(uint8_t device_id);
@@ -89,7 +92,7 @@ static void uart_init(app_uart_event_handler_t uart_event_handler)
 			UART_RX_BUF_SIZE,
 			UART_TX_BUF_SIZE,
 			uart_event_handler,
-			APP_IRQ_PRIORITY_LOW,
+			APP_IRQ_PRIORITY_HIGH,
 			err_code);
 	APP_ERROR_CHECK(err_code);
 }

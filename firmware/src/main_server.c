@@ -11,6 +11,8 @@
 #include "app_uart.h"
 #include "app_util_platform.h"
 #include "nrf_gpio.h"
+#include "nrf_drv_clock.h"
+#include "app_fifo.h"
 
 #include "SEGGER_RTT.h"
 #include "ble_barts.h"
@@ -33,11 +35,11 @@
 #define DEVICE_NAME                     "BART"                               /**< Name of device. Will be included in the advertising data. */
 #define BARTS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
-#define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */
+#define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 100 ms). */
+#define APP_ADV_TIMEOUT_IN_SECONDS      180                                         	/**< The advertising timeout (in units of seconds). */
 
-#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
-#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
+#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(7.5, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (7.5 ms), Connection interval uses 1.25 ms units. */
+#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
 #define SLAVE_LATENCY                   0                                           /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
 #define FIRST_CONN_PARAMS_UPDATE_DELAY  APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER)  /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
@@ -50,7 +52,51 @@ static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;
 static ble_uuid_t                       m_adv_uuids[] = {{.uuid = BLE_UUID_BARTS_SERVICE, .type = BARTS_SERVICE_UUID_TYPE}};
 
 
+extern uint8_t uart_rcv_buff[UART_RCV_BUF_SIZE];
+extern app_fifo_t uart_rcv_fifo;
 
+static uint8_t ble_send_buf[20];
+static uint32_t ble_to_send_size;
+static bool is_remain_ble_to_send = false;
+static bool is_ble_sending = false;
+static bool is_ble_send_req = false;
+
+static void transfer_data_from_uart_buf_to_ble()
+{
+	uint32_t err_code;
+
+	while (1) {
+		if (!is_remain_ble_to_send) {
+			ble_to_send_size = 20;
+			app_fifo_read(&uart_rcv_fifo, ble_send_buf, &ble_to_send_size);
+			if (ble_to_send_size == 0) break;
+		}
+
+		DBG("[BLE send]");
+		for (int i=0;i<ble_to_send_size;i++) {
+			DBG("%02x",ble_send_buf[i]);
+		}
+		DBG("\n");
+
+		err_code = ble_barts_send(&m_barts, ble_send_buf, ble_to_send_size);
+
+		if (err_code == NRF_SUCCESS) {
+			DBG("[BLE send] success\n");
+			is_remain_ble_to_send = false;
+		}
+		else if (err_code == BLE_ERROR_NO_TX_PACKETS || NRF_ERROR_BUSY) {
+			DBG("[BLE send] buffer full\n");
+			is_remain_ble_to_send = true;
+			break;
+		}
+		else if (err_code != NRF_ERROR_INVALID_STATE) {
+			is_remain_ble_to_send = true;
+			APP_ERROR_CHECK(err_code);
+			break;
+		}
+	}
+
+}
 
 static void gap_params_init(void)
 {
@@ -164,6 +210,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
 	uint32_t                         err_code;
+	uint8_t dummy;
 
 	switch (p_ble_evt->header.evt_id) {
 	case BLE_GATTS_EVT_WRITE:
@@ -255,6 +302,17 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 			}
 		} break; // BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST
 
+	case BLE_EVT_TX_COMPLETE:
+		led_blink(TX_LED);
+		// fifoにデータが残っている
+		if (app_fifo_peek(&uart_rcv_fifo, 0, &dummy) == NRF_SUCCESS) {
+			transfer_data_from_uart_buf_to_ble();
+		}
+		else {
+			is_ble_sending = false;
+		}
+		break;
+
 	default:
 		// No implementation needed.
 		break;
@@ -290,8 +348,25 @@ static void ble_stack_init(void)
 	//Check the ram settings against the used number of links
 	CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
 
+	// 各Bandwidthの許容する接続数を設定
+	ble_conn_bw_counts_t bw_counts = {
+			.tx_counts = {.high_count=1, .mid_count=0, .low_count=0},
+			.rx_counts = {.high_count=1, .mid_count=0, .low_count=0}
+	};
+	ble_enable_params.common_enable_params.p_conn_bw_counts = &bw_counts;
+
 	// Enable BLE stack.
 	err_code = softdevice_enable(&ble_enable_params);
+	APP_ERROR_CHECK(err_code);
+
+	// Bandwidthをhihgに設定
+	ble_opt_t ble_opt;
+	memset(&ble_opt, 0x00, sizeof(ble_opt));
+	ble_opt.common_opt.conn_bw.conn_bw.conn_bw_tx = BLE_CONN_BW_HIGH;
+	ble_opt.common_opt.conn_bw.conn_bw.conn_bw_rx = BLE_CONN_BW_HIGH;
+	ble_opt.common_opt.conn_bw.role = BLE_GAP_ROLE_PERIPH;
+
+	err_code = sd_ble_opt_set(BLE_COMMON_OPT_CONN_BW, &ble_opt);
 	APP_ERROR_CHECK(err_code);
 
 	// Subscribe for BLE events.
@@ -302,40 +377,30 @@ static void ble_stack_init(void)
 
 void server_uart_event_handle(app_uart_evt_t * p_event)
 {
-	static uint8_t data_array[BLE_BARTS_MAX_DATA_LEN];
-	static uint8_t index = 0;
-	uint32_t       err_code;
+	uint8_t rcv_data;
 
 	switch (p_event->evt_type) {
 	case APP_UART_DATA_READY:
-		UNUSED_VARIABLE(app_uart_get(&data_array[index]));
+		app_uart_get(&rcv_data);
 
 		// 未接続時はデータを無視
 		if (m_conn_handle == BLE_CONN_HANDLE_INVALID) break;
 
-		index++;
+		app_fifo_put(&uart_rcv_fifo, rcv_data);
 
-		if ((data_array[index - 1] == '\n') || (index >= (BLE_BARTS_MAX_DATA_LEN))) {
-			DBG("[UART receive]");
-			for (int i=0;i<index;i++) {
-				DBG("%02x",data_array[i]);
-			}
-			DBG("\n");
-			err_code = ble_barts_send(&m_barts, data_array, index);
-			led_blink(TX_LED);
-			if (err_code != NRF_ERROR_INVALID_STATE) {
-				APP_ERROR_CHECK(err_code);
-			}
-
-			index = 0;
+		if (!is_ble_sending) {
+			is_ble_send_req = true;
 		}
+
 		break;
 
 	case APP_UART_COMMUNICATION_ERROR:
+		DBG("APP_UART_COMMUNICATION_ERROR\n");
 		APP_ERROR_HANDLER(p_event->data.error_communication);
 		break;
 
 	case APP_UART_FIFO_ERROR:
+		DBG("APP_UART_FIFO_ERROR\n");
 		APP_ERROR_HANDLER(p_event->data.error_code);
 		break;
 
@@ -374,12 +439,37 @@ static void advertising_init(void)
 	APP_ERROR_CHECK(err_code);
 }
 
+static void clock_init()
+{
+	// 外部のXTALを起動
+	uint32_t err_code = nrf_drv_clock_init();
+	APP_ERROR_CHECK(err_code);
+
+	nrf_clock_hfclk_t clk_src = nrf_clock_hf_src_get();
+	if (clk_src == NRF_CLOCK_HFCLK_LOW_ACCURACY) {
+		DBG("NRF_CLOCK_HFCLK_LOW_ACCURACY\n");
+	}
+	else {
+		DBG("NRF_CLOCK_HFCLK_HIGH_ACCURACY\n");
+	}
+
+	if (nrf_clock_hf_is_running(NRF_CLOCK_HFCLK_LOW_ACCURACY)) {
+		DBG("LOW RUNNING\n");
+	}
+
+	if (nrf_clock_hf_is_running(NRF_CLOCK_HFCLK_HIGH_ACCURACY)) {
+		DBG("HIGH RUNNING\n");
+	}
+}
 
 void server_main(uint8_t device_id)
 {
 	uint32_t err_code;
 
+	app_fifo_init(&uart_rcv_fifo, uart_rcv_buff, UART_RCV_BUF_SIZE);
+
 	ble_stack_init();
+	clock_init();
 	gap_params_init();
 	services_init(device_id);
 	advertising_init();
@@ -399,8 +489,14 @@ void server_main(uint8_t device_id)
 
 	// Enter main loop.
 	while (1) {
+		if (is_ble_send_req) {
+			is_ble_send_req = false;
+			transfer_data_from_uart_buf_to_ble();
+			is_ble_sending = true;
+		}
 		uint32_t err_code = sd_app_evt_wait();
 		APP_ERROR_CHECK(err_code);
+
 	}
 }
 
