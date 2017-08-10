@@ -117,6 +117,11 @@ USB周りの回路図
 
 # ファームウェア
 
+## 最新のファームウェアのバイナリ
+
+最新のビルドされたバイナリはbinディレクトリに入っています。
+
+
 ## 開発環境
 
 * [Nordic nRF5 SDK v12.1](https://www.nordicsemi.com/eng/Products/Bluetooth-low-energy/nRF5-SDK)
